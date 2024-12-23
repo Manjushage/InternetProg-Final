@@ -1,0 +1,49 @@
+@model List<SurveyResultViewModel>
+@{
+    ViewData["Title"] = "Tüm Anket Sonuçları";
+    Layout = "~/Views/Shared/_adminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Tüm Anket Sonuçları</h1>
+
+    @foreach (var survey in Model)
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">@survey.SurveyTitle</h5>
+            </div>
+            <div class="card-body">
+                @foreach (var question in survey.Questions)
+                {
+                    <div class="mb-3">
+                        <strong>@question.QuestionText</strong>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Cevap</th>
+                                    <th>Sayı</th>
+                                    <th>Yüzde</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    var total = question.AnswerCounts.Values.Sum();
+                                }
+                                @foreach (var answer in question.AnswerCounts)
+                                {
+                                    var percentage = total > 0 ? (answer.Value * 100.0 / total) : 0;
+                                    <tr>
+                                        <td>@answer.Key</td>
+                                        <td>@answer.Value</td>
+                                        <td>@percentage.ToString("F1")%</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div> 

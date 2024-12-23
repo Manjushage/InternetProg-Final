@@ -1,0 +1,116 @@
+@model SurveyResultViewModel
+@{
+    ViewData["Title"] = "Anket Sonuçları";
+    Layout = "~/Views/Shared/_adminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4">@Model.SurveyTitle - Sonuçları</h2>
+
+    @foreach (var question in Model.Questions)
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">@question.QuestionText</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Grafik -->
+                    <div class="col-md-6">
+                        <canvas id="chart_@question.QuestionId"></canvas>
+                    </div>
+
+                    <!-- İstatistikler -->
+                    <div class="col-md-6">
+                        <h6>Cevap Dağılımı:</h6>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Cevap</th>
+                                    <th>Sayı</th>
+                                    <th>Yüzde</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    var total = question.AnswerCounts.Values.Sum();
+                                }
+                                @foreach (var answer in question.AnswerCounts)
+                                {
+                                    var percentage = total > 0 ? (answer.Value * 100.0 / total) : 0;
+                                    <tr>
+                                        <td>@answer.Key</td>
+                                        <td>@answer.Value</td>
+                                        <td>@percentage.ToString("F1")%</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Detaylı Cevaplar -->
+                <div class="mt-4">
+                    <h6>Detaylı Cevaplar:</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Kullanıcı</th>
+                                    <th>Cevap</th>
+                                    <th>Tarih</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var answer in question.UserAnswers.OrderByDescending(a => a.AnswerDate))
+                                {
+                                    <tr>
+                                        <td>@answer.UserName</td>
+                                        <td>@answer.Answer</td>
+                                        <td>@answer.AnswerDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            @foreach (var question in Model.Questions)
+            {
+                <text>
+                new Chart(document.getElementById('chart_@question.QuestionId'), {
+                    type: 'pie',
+                    data: {
+                        labels: [@Html.Raw(string.Join(",", question.AnswerCounts.Keys.Select(k => $"'{k}'")))],
+                        datasets: [{
+                            data: [@string.Join(",", question.AnswerCounts.Values)],
+                            backgroundColor: [
+                                '#FF6384',
+                                '#36A2EB',
+                                '#FFCE56',
+                                '#4BC0C0'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+                </text>
+            }
+        });
+    </script>
+} 
